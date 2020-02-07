@@ -1,3 +1,4 @@
+# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 from perm_equivariant_seq2seq.symmetry_groups import LanguageInvariance
 
 

@@ -1,3 +1,4 @@
+#  Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 import random
 import argparse
 import os
