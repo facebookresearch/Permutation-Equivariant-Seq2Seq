@@ -1,4 +1,4 @@
-# Contributing to fruits-tools-game
+# Contributing to Permutation-Equivariant-Seq2Seq
 We want to make contributing to this project as easy and transparent as
 possible.
 
