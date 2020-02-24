@@ -45,17 +45,17 @@ parser.add_argument('--learning_rate', type=float, default=1e-4, help='init lear
 parser.add_argument('--teacher_forcing_ratio', type=float, default=0.5)
 parser.add_argument('--save_dir', type=str, default='./models/', help='Top-level directory for saving experiment')
 parser.add_argument('--print_freq', type=int, default=1000, help='Frequency with which to print training loss')
-parser.add_argument('--save_freq', type=int, default=20000, help='Frequency with which to save models during training')
+parser.add_argument('--save_freq', type=int, default=200000, help='Frequency with which to save models during training')
 args = parser.parse_args()
 
 args.save_path = os.path.join(args.save_dir,
                               '%s' % args.split,
-                              '%s' % args.model,
                               'rnn_%s_hidden_%s_directions_%s' % (
                                   args.layer_type, args.hidden_size, 2 if args.bidirectional else 1))
-
+# Create model directory
 if not os.path.isdir(args.save_path):
     os.makedirs(args.save_path)
+
 
 def pair_generator(pairs, batch_size):
     """Create a generator for batches of pairs
@@ -99,9 +99,8 @@ def train(batch,
 
     for training_triplet in batch:
         sentence_loss = 0
-        input_tensor, syntax_tensor, target_tensor = training_triplet
+        input_tensor, target_tensor = training_triplet
         model_output = model_to_train(input_tensor=input_tensor,
-                                      syntax_tensor=syntax_tensor,
                                       target_tensor=target_tensor,
                                       use_teacher_forcing=use_teacher_forcing)
 
@@ -159,9 +158,8 @@ def test_accuracy(model_to_test, pairs):
     model_to_test.eval()
     with torch.no_grad():
         for pair in pairs:
-            input_tensor, syntax_tensor, output_tensor = pair
-            model_output = model_to_test(input_tensor=input_tensor,
-                                         syntax_tensor=syntax_tensor)
+            input_tensor, output_tensor = pair
+            model_output = model_to_test(input_tensor=input_tensor)
             accuracies.append(sentence_correct(output_tensor, model_output))
     return torch.stack(accuracies).type(torch.float).mean()
 
@@ -252,9 +250,7 @@ if __name__ == '__main__':
             print('%s iterations: %s' % (iteration + 1, print_loss_avg))
 
         if (iteration + 1) % args.save_freq == 0:
-            # save model
-            save_path = os.path.join(model_path, 'model_iteration%s.pt' % (iteration + 1))
-            torch.save(model.state_dict(), save_path)
+            # save model if is better
             if args.validation_size > 0.:
                 val_acc = test_accuracy(model, validation_pairs).item()
                 if val_acc > best_acc:

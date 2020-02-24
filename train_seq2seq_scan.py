@@ -54,7 +54,7 @@ args.save_path = os.path.join(args.save_dir,
                                                                           args.hidden_size,
                                                                           args.semantic_size,
                                                                           args.num_layers))
-
+# Create model directory
 if not os.path.isdir(args.save_path):
     os.makedirs(args.save_path)
 
