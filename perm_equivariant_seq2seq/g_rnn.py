@@ -4,9 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from perm_equivariant_seq2seq.g_layers import WordConv, GroupConv, GroupClassifier
-from perm_equivariant_seq2seq.g_layers import LSGroupClassifier, LSGRoupEmbedding
 from perm_equivariant_seq2seq.g_cells import GRNNCell, GGRUCell, GLSTMCell
-from perm_equivariant_seq2seq.symmetry_groups import LearnablePermutationSymmetry
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -118,8 +116,7 @@ class EquivariantAttnDecoder(nn.Module):
             self.recurrent_cell = GLSTMCell(symmetry_group=self.symmetry_group,
                                             hidden_size=self.hidden_size)
         # Initialize linear layer and softmax for output
-        classifier = LSGroupClassifier if self.learnable else GroupClassifier
-        self.out = classifier(symmetry_group=self.symmetry_group,
+        self.out = GroupClassifier(symmetry_group=self.symmetry_group,
                               vocabulary_size=self.output_size,
                               embedding_size=self.hidden_size)
         self.softmax = nn.LogSoftmax(dim=1)

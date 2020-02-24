@@ -9,7 +9,6 @@ import perm_equivariant_seq2seq.utils as utils
 from perm_equivariant_seq2seq.models import BasicSeq2Seq
 from perm_equivariant_seq2seq.data_utils import get_scan_split, get_invariant_scan_languages
 from perm_equivariant_seq2seq.utils import tensors_from_pair, tensor_from_sentence
-from perm_equivariant_seq2seq.language_utils import get_invariances
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 SOS_token = 0
@@ -74,9 +73,7 @@ def evaluate(model_to_eval,
     model.eval()
     with torch.no_grad():
         input_sentence = tensor_from_sentence(inp_lang, sentence)
-        sentence_syntax = tensor_from_sentence(syntax_lang, syntax_lang.map_sentence(sentence))
-        model_output = model_to_eval(input_tensor=input_sentence,
-                                     syntax_tensor=sentence_syntax)
+        model_output = model_to_eval(input_tensor=input_sentence)
 
         decoded_words = []
         for di in range(model_to_eval.max_length):
@@ -118,9 +115,8 @@ def test_accuracy(model_to_test, pairs):
     model.eval()
     with torch.no_grad():
         for pair in pairs:
-            input_tensor, syntax_tensor, output_tensor = pair
-            model_output = model_to_test(input_tensor=input_tensor,
-                                         syntax_tensor=syntax_tensor)
+            input_tensor, output_tensor = pair
+            model_output = model_to_test(input_tensor=input_tensor)
             accuracies.append(sentence_correct(output_tensor, model_output))
     return torch.stack(accuracies).type(torch.float).mean()
 
@@ -138,9 +134,8 @@ if __name__ == '__main__':
     experiment_arguments = utils.load_args_from_txt(parser, args_path)
 
     # Load data
-    invariances = get_invariances(experiment_arguments)
     train_pairs, test_pairs = get_scan_split(split=experiment_arguments.split)
-    commands, commands_syntax, actions = get_invariant_scan_languages(train_pairs, invariances)
+    commands, actions = get_invariant_scan_languages(train_pairs, [])
 
     # Initialize model
     model = BasicSeq2Seq(input_language=commands,
@@ -158,8 +153,8 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load(model_path))
 
     # Convert data to torch tensors
-    training_eval = [tensors_from_pair(pair, commands, actions, commands_syntax) for pair in train_pairs]
-    testing_pairs = [tensors_from_pair(pair, commands, actions, commands_syntax) for pair in test_pairs]
+    training_eval = [tensors_from_pair(pair, commands, actions) for pair in train_pairs]
+    testing_pairs = [tensors_from_pair(pair, commands, actions) for pair in test_pairs]
 
     # Compute accuracy and print some translations
     if args.compute_train_accuracy:
@@ -174,7 +169,7 @@ if __name__ == '__main__':
         pair = random.choice(test_pairs)
         print('>', pair[0])
         print('=', pair[1])
-        output_words = evaluate(model, commands, commands_syntax, actions, pair[0])
+        output_words = evaluate(model, commands, actions, pair[0])
         output_sentence = ' '.join(output_words)
         print('<', output_sentence)
         print('')

@@ -35,21 +35,19 @@ def tensor_from_sentence(lang, sentence):
     return torch.tensor(indexes, dtype=torch.long, device=device).view(-1, 1)
 
 
-def tensors_from_pair(pair, lang1, lang2, syntax=None):
+def tensors_from_pair(pair, lang1, lang2):
     """Convert a translation pair to torch.tensor types
 
     Args:
         pair (list::list): List (pair) of sentences in string format
         lang1 (Language): Language object from which input sentence is derived
         lang2 (Language): Language object from which target sentence is derived
-        syntax (InvariantLanguage): InvariantLanguage object from which input sentence syntax is derived
     Returns:
         (tuple::torch.tensors) Tensor representation of translation triplet (input, syntax, output)
     """
     input_tensor = tensor_from_sentence(lang1, pair[0])
-    syntax_tensor = tensor_from_sentence(syntax, syntax.map_sentence(pair[0])) if syntax else None
     target_tensor = tensor_from_sentence(lang2, pair[1])
-    return input_tensor, syntax_tensor, target_tensor
+    return input_tensor, target_tensor
 
 
 """ Saving and loading models """

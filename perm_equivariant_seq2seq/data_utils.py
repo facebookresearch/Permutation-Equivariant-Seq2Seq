@@ -1,6 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 from io import open
-import unicodedata
 import re
 import os
 
@@ -10,38 +9,6 @@ from perm_equivariant_seq2seq.language_utils import Language, InvariantLanguage,
 
 SOS_token = 0
 EOS_token = 1
-
-
-"""
-    Example: Enlgish-French data handling
-"""
-
-
-def unicode_to_ascii(s):
-    return ''.join(
-        c for c in unicodedata.normalize('NFD', s)
-        if unicodedata.category(c) != 'Mn'
-    )
-
-
-def normalize_string(s):
-    s = unicode_to_ascii(s.lower().strip())
-    s = re.sub(r"([.!?])", r" \1", s)
-    s = re.sub(r"[^a-zA-Z.!?]+", r" ", s)
-    return s
-
-
-def get_fre_eng(path='/Users/gordonjo/Downloads/fra-eng/fra.txt'):
-    # Read the file and split into lines
-    lines = open(path, encoding='utf-8').read().strip().split('\n')
-    pairs = [[normalize_string(s) for s in l.split('\t')] for l in lines]
-    input_lang = Language('english')
-    output_lang = Language('french')
-    for pair in pairs:
-        input_lang.add_sentence(pair[0])
-        output_lang.add_sentence(pair[1])
-    return input_lang, output_lang, pairs
-
 
 """
     SCAN Data handling
@@ -64,15 +31,13 @@ def read_scan_data(path):
 def get_invariant_scan_languages(pairs, invariances):
     # Initialize language classes
     input_lang = Language('commands')
-    syntax_lang = InvariantLanguage('syntax', invariances)
     output_lang = Language('actions')
     # Set-up languages
     for pair in pairs:
         input_lang.add_sentence(pair[0])
-        syntax_lang.add_sentence(pair[0])
         output_lang.add_sentence(pair[1])
     # Return languages (including invariant syntax)
-    return input_lang, syntax_lang, output_lang
+    return input_lang, output_lang
 
 
 def get_equivariant_scan_languages(pairs, input_equivariances, output_equivariances):
@@ -92,7 +57,7 @@ def get_equivariant_scan_languages(pairs, input_equivariances, output_equivarian
 def get_scan_split(split=None):
     assert split in ['simple', 'add_jump', 'length_generalization', 'around_right', 'opposite_right'], \
         "Please choose valid experiment split"
-    DATA_DIR = '../seq2seq-generalization/SCAN/'
+    DATA_DIR = './SCAN/'
 
     # Simple (non-generalization) split
     if split == 'simple':

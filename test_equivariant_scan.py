@@ -120,9 +120,8 @@ def test_accuracy(model_to_test, pairs):
     model.eval()
     with torch.no_grad():
         for pair in pairs:
-            input_tensor, syntax_tensor, output_tensor = pair
-            model_output = model_to_test(input_tensor=input_tensor,
-                                         syntax_tensor=syntax_tensor)
+            input_tensor, output_tensor = pair
+            model_output = model_to_test(input_tensor=input_tensor)
             accuracies.append(sentence_correct(output_tensor, model_output))
     return torch.stack(accuracies).type(torch.float).mean()
 

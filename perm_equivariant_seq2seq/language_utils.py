@@ -81,7 +81,7 @@ class EquivariantLanguage(Language):
             w_idx = idx + num_fixed_words
             self.word2index[word] = w_idx
             self.index2word[w_idx] = word
-        for idx, word in enumerate(other_words):
+        for idx, word in enumerate(sorted(other_words)):
             w_idx = idx + num_fixed_words + self.num_equivariant_words
             self.word2index[word] = w_idx
             self.index2word[w_idx] = word
