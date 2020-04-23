@@ -64,7 +64,7 @@ parser.add_argument('--validation_size',
                     type=float, 
                     default=0.2,
                     help='Validation proportion to use for early-stopping')
-parser.add_argument('--n_iiters', 
+parser.add_argument('--n_iters', 
                     type=int, 
                     default=200000, 
                     help='number of training iterations')

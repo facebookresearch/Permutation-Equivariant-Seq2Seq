@@ -52,15 +52,15 @@ args = parser.parse_args()
 # Model options
 parser.add_argument('--layer_type',
                     choices=['LSTM', 'GRU', 'RNN'], 
-                    default='GRU',
+                    default='LSTM',
                     help='Type of rnn layers to be used for recurrent components')
 parser.add_argument('--hidden_size', 
                     type=int, 
-                    default=256, 
+                    default=64, 
                     help='Number of hidden units in encoder / decoder')
 parser.add_argument('--semantic_size', 
                     type=int,
-                    default=120, 
+                    default=64, 
                     help='Dimensionality of semantic embedding')
 parser.add_argument('--num_layers', 
                     type=int, 
