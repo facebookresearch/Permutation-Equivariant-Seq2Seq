@@ -8,7 +8,7 @@ Permutation-Equivariant-Seq2Seq is licensed under the MIT license. The text of t
 ## Dependencies
 This code requires the following:
 * Python 3.6 or greater
-* PyTorch 1.0 or greater
+* PyTorch 1.0 or greater 
 
 ## Installation
 1. Clone or download this repository.

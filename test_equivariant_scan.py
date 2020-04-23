@@ -21,44 +21,106 @@ EOS_token = 1
 
 parser = argparse.ArgumentParser()
 # Experiment options
-parser.add_argument('--experiment_dir', type=str, help='Path to experiment directory, should contain args and model')
-parser.add_argument('--best_validation', dest='best_validation', default=False, action='store_true',
+parser.add_argument('--experiment_dir', 
+                    type=str, 
+                    help='Path to experiment directory, should contain args and model')
+parser.add_argument('--best_validation', 
+                    dest='best_validation', 
+                    default=False, 
+                    action='store_true',
                     help="Boolean indicating whether to use best validation model")
-parser.add_argument('--fully_trained', dest='fully_trained', default=False, action='store_true',
+parser.add_argument('--fully_trained', 
+                    dest='fully_trained', 
+                    default=False, 
+                    action='store_true',
                     help="Boolean indicating whether to use fully trained model")
-parser.add_argument('--iterations', type=int, default=0, help='If not fully trained, how many training iterations.')
-parser.add_argument('--compute_train_accuracy', dest='compute_train_accuracy', default=False, action='store_true',
+parser.add_argument('--iterations', 
+                    type=int, 
+                    default=0, 
+                    help='If not fully trained, how many training iterations.')
+parser.add_argument('--compute_train_accuracy', 
+                    dest='compute_train_accuracy', 
+                    default=False, 
+                    action='store_true',
                     help="Boolean to evaluate train accuracy")
-parser.add_argument('--compute_test_accuracy', dest='compute_test_accuracy', default=False, action='store_true',
+parser.add_argument('--compute_test_accuracy', 
+                    dest='compute_test_accuracy', 
+                    default=False, 
+                    action='store_true',
                     help="Boolean to evaluate test accuracy")
-parser.add_argument('--print_translations', type=int, default=0,
+parser.add_argument('--print_translations', 
+                    type=int, 
+                    default=0,
                     help="Print a small number of translations from the test set")
-parser.add_argument('--print_param_nums', dest='print_param_nums', default=False, action='store_true',
+parser.add_argument('--print_param_nums', 
+                    dest='print_param_nums', 
+                    default=False, 
+                    action='store_true',
                     help="Print the number of model parameters")
 args = parser.parse_args()
 # Model options
-parser.add_argument('--hidden_size', type=int, default=256, help='Number of hidden units in encoder / decoder')
-parser.add_argument('--layer_type', choices=['GGRU', 'GRNN', 'GLSTM'], default='GRNN',
+parser.add_argument('--hidden_size', 
+                    type=int, 
+                    default=64, 
+                    help='Number of hidden units in encoder / decoder')
+parser.add_argument('--layer_type', 
+                    choices=['GGRU', 'GRNN', 'GLSTM'],
+                    default='GLSTM',
                     help='Type of rnn layers to be used for recurrent components')
-parser.add_argument('--use_attention', dest='use_attention', default=False, action='store_true',
+parser.add_argument('--use_attention', 
+                    dest='use_attention', 
+                    default=False, 
+                    action='store_true',
                     help="Boolean to use attention in the decoder")
-parser.add_argument('--bidirectional', dest='bidirectional', default=False, action='store_true',
+parser.add_argument('--bidirectional', 
+                    dest='bidirectional', 
+                    default=False, 
+                    action='store_true',
                     help="Boolean to use bidirectional encoder.")
 # Equivariance options:
-parser.add_argument('--equivariance', choices=['verb', 'direction', 'verb+direction', 'none'])
+parser.add_argument('--equivariance', 
+                    choices=['verb', 'direction', 'verb+direction', 'none'])
 # Optimization and training hyper-parameters
-parser.add_argument('--split', help='Each possible split defines a different experiment as proposed by [1]',
-                    choices=[None, 'simple', 'add_jump', 'length_generalization', 'around_right', 'opposite_right'])
-parser.add_argument('--weight_decay', type=float, default=0., help='Weight decay for optimizer')
-parser.add_argument('--batch_size', type=int, default=1, help='batch size for training (unused)')
-parser.add_argument('--validation_size', type=float, default=0., help='Validation proportion to use for early-stopping')
-parser.add_argument('--n_iters', type=int, default=5e6, help='number of training iterations')
-parser.add_argument('--learning_rate', type=float, default=1e-3, help='init learning rate')
-parser.add_argument('--teacher_forcing_ratio', type=float, default=0.5)
-parser.add_argument('--save_dir', type=str, default='./models/', help='Top-level directory for saving experiment')
-parser.add_argument('--print_freq', type=int, default=1000, help='Frequency with which to print training loss')
-parser.add_argument('--plot_freq', type=int, default=20, help='Frequency with which to plot training loss')
-parser.add_argument('--save_freq', type=int, default=10e10, help='Frequency with which to save models during training')
+parser.add_argument('--split', 
+                    help='Each possible split defines a different experiment as proposed by [1]',
+                    choices=[None, 'simple', 'add_jump',
+                             'length_generalization', 'around_right', 
+                             'opposite_right'])
+parser.add_argument('--weight_decay', 
+                    type=float, 
+                    default=0., 
+                    help='Weight decay for optimizer')
+parser.add_argument('--batch_size', 
+                    type=int, 
+                    default=1, 
+                    help='batch size for training (unused)')
+parser.add_argument('--validation_size', 
+                    type=float, 
+                    default=0.2, 
+                    help='Validation proportion to use for early-stopping')
+parser.add_argument('--n_iters', 
+                    type=int, 
+                    default=200000, 
+                    help='number of training iterations')
+parser.add_argument('--learning_rate', 
+                    type=float, 
+                    default=1e-4, 
+                    help='init learning rate')
+parser.add_argument('--teacher_forcing_ratio', 
+                    type=float, 
+                    default=0.5)
+parser.add_argument('--save_dir', 
+                    type=str, 
+                    default='./models/', 
+                    help='Top-level directory for saving experiment')
+parser.add_argument('--print_freq', 
+                    type=int, 
+                    default=1000, 
+                    help='Frequency with which to print training loss')
+parser.add_argument('--save_freq', 
+                    type=int, 
+                    default=200000, 
+                    help='Frequency with which to save models during training')
 
 
 def evaluate(model_to_eval,
@@ -71,7 +133,8 @@ def evaluate(model_to_eval,
         model_to_eval: (nn.Module: Seq2SeqModel) seq2seq model being evaluated
         inp_lang: (Lang) Language object for input language
         out_lang: (Lang) Language object for output language
-        sentence: (torch.tensor) Tensor representation (1-hot) of sentence in input language
+        sentence: (torch.tensor) Tensor representation (1-hot) of sentence in 
+        input language
     Returns:
         (list) Words in output language as decoded by model
     """
@@ -132,35 +195,46 @@ if __name__ == '__main__':
     if args.best_validation:
         model_path = os.path.join(args.experiment_dir, "best_validation.pt")
     elif args.fully_trained:
-        model_path = os.path.join(args.experiment_dir, "model_fully_trained.pt")
+        model_path = os.path.join(args.experiment_dir, 
+                                  "model_fully_trained.pt")
     else:
-        model_path = os.path.join(args.experiment_dir, "model_iteration%s.pt" % args.iterations)
-    assert os.path.exists(args.experiment_dir), "Experiment directory not found"
+        model_path = os.path.join(args.experiment_dir, 
+                                  "model_iteration%s.pt" % args.iterations)
+    assert os.path.exists(args.experiment_dir), \
+        "Experiment directory not found"
     assert os.path.exists(model_path), "Model number not found in directory"
-    assert os.path.exists(args_path), "Argparser details directory not found in directory"
+    assert os.path.exists(args_path), \
+        "Argparser details directory not found in directory"
     experiment_arguments = utils.load_args_from_txt(parser, args_path)
 
     # Load data
     train_pairs, test_pairs = get_scan_split(split=experiment_arguments.split)
     if experiment_arguments.equivariance == 'verb':
-        in_equivariances, out_equivariances = ['jump', 'run', 'walk', 'look'], ['JUMP', 'RUN', 'WALK', 'LOOK']
+        in_equivariances = ['jump', 'run', 'walk', 'look']
+        out_equivariances = ['JUMP', 'RUN', 'WALK', 'LOOK']
     elif experiment_arguments.equivariance == 'direction':
-        in_equivariances, out_equivariances = ['right', 'left'], ['TURN_RIGHT', 'TURN_LEFT']
+        in_equivariances = ['right', 'left']
+        out_equivariances = ['TURN_RIGHT', 'TURN_LEFT']
     elif experiment_arguments.equivariance == 'verb+direction':
         in_equivariances = ['jump', 'run', 'walk', 'look', 'right', 'left']
         out_equivariances = ['JUMP', 'RUN', 'WALK', 'LOOK', 'TURN_RIGHT', 'TURN_LEFT']
     else:
         in_equivariances, out_equivariances = [], []
-    equivariant_commands, equivariant_actions = get_equivariant_scan_languages(pairs=train_pairs,
-                                                                               input_equivariances=in_equivariances,
-                                                                               output_equivariances=out_equivariances)
+    equivariant_commands, equivariant_actions = \
+        get_equivariant_scan_languages(pairs=train_pairs,
+                                       input_equivariances=in_equivariances,
+                                       output_equivariances=out_equivariances)
     if experiment_arguments.equivariance == 'verb+direction':
         from perm_equivariant_seq2seq.symmetry_groups import VerbDirectionSCAN
 
-        input_symmetry_group = VerbDirectionSCAN(num_letters=equivariant_commands.n_words,
-                                                 first_equivariant=equivariant_commands.num_fixed_words + 1)
-        output_symmetry_group = VerbDirectionSCAN(num_letters=equivariant_actions.n_words,
-                                                  first_equivariant=equivariant_actions.num_fixed_words + 1)
+        input_symmetry_group = VerbDirectionSCAN(
+            num_letters=equivariant_commands.n_words,
+            first_equivariant=equivariant_commands.num_fixed_words + 1
+        )
+        output_symmetry_group = VerbDirectionSCAN(
+            num_letters=equivariant_actions.n_words,
+            first_equivariant=equivariant_actions.num_fixed_words + 1
+        )
     else:
         input_symmetry_group = get_permutation_equivariance(equivariant_commands)
         output_symmetry_group = get_permutation_equivariance(equivariant_actions)
@@ -181,8 +255,10 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load(model_path))
 
     # Convert data to torch tensors
-    training_eval = [tensors_from_pair(pair, equivariant_commands, equivariant_actions) for pair in train_pairs]
-    testing_pairs = [tensors_from_pair(pair, equivariant_commands, equivariant_actions) for pair in test_pairs]
+    training_eval = [tensors_from_pair(pair, equivariant_commands, equivariant_actions) 
+                     for pair in train_pairs]
+    testing_pairs = [tensors_from_pair(pair, equivariant_commands, equivariant_actions) 
+                     for pair in test_pairs]
 
     # Compute accuracy and print some translation
     if args.compute_train_accuracy:
@@ -197,7 +273,8 @@ if __name__ == '__main__':
         pair = random.choice(test_pairs)
         print('>', pair[0])
         print('=', pair[1])
-        output_words = evaluate(model, equivariant_commands, equivariant_actions, pair[0])
+        output_words = evaluate(model, equivariant_commands, 
+                                equivariant_actions, pair[0])
         output_sentence = ' '.join(output_words)
         print('<', output_sentence)
         print('')

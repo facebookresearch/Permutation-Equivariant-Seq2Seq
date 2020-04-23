@@ -13,8 +13,10 @@ from perm_equivariant_seq2seq.utils import tensors_from_pair
 from perm_equivariant_seq2seq.data_utils import get_invariant_scan_languages
 
 """
-[1]: Lake and Baroni 2019: Generalization without systematicity: On the compositional skills of seq2seq networks
-[2]: Bahdanau et al. 2014: Neural machine translation by jointly learning to align and translate
+[1]: Lake and Baroni 2019: Generalization without systematicity: On the 
+compositional skills of seq2seq networks
+[2]: Bahdanau et al. 2014: Neural machine translation by jointly learning to 
+align and translate
 """
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -24,36 +26,77 @@ EOS_token = 1
 # Parse command-line arguments
 parser = argparse.ArgumentParser()
 # Model options
-parser.add_argument('--layer_type', choices=['LSTM', 'GRU', 'RNN'], default='LSTM',
+parser.add_argument('--layer_type', 
+                    choices=['LSTM', 'GRU', 'RNN'], 
+                    default='LSTM',
                     help='Type of rnn layers to be used for recurrent components')
-parser.add_argument('--hidden_size', type=int, default=64, help='Number of hidden units in encoder / decoder')
-parser.add_argument('--semantic_size', type=int, default=64, help='Dimensionality of semantic embedding')
-parser.add_argument('--num_layers', type=int, default=1, help='Number of hidden layers in encoder')
-parser.add_argument('--use_attention', dest='use_attention', default=False, action='store_true',
+parser.add_argument('--hidden_size', 
+                    type=int, 
+                    default=64, 
+                    help='Number of hidden units in encoder / decoder')
+parser.add_argument('--semantic_size', 
+                    type=int, 
+                    default=64, 
+                    help='Dimensionality of semantic embedding')
+parser.add_argument('--num_layers', 
+                    type=int, 
+                    default=1, 
+                    help='Number of hidden layers in encoder')
+parser.add_argument('--use_attention', 
+                    dest='use_attention', 
+                    default=False, 
+                    action='store_true',
                     help="Boolean to use attention in the decoder")
-parser.add_argument('--bidirectional', dest='bidirectional', default=False, action='store_true',
+parser.add_argument('--bidirectional', 
+                    dest='bidirectional', 
+                    default=False, 
+                    action='store_true',
                     help="Boolean to use bidirectional encoder")
-parser.add_argument('--drop_rate', type=float, default=0.1, help="Dropout drop rate (not keep rate)")
+parser.add_argument('--drop_rate', 
+                    type=float, 
+                    default=0.1, 
+                    help="Dropout drop rate (not keep rate)")
 # Optimization and training hyper-parameters
-parser.add_argument('--split', choices=[None, 'simple', 'add_jump', 'length_generalization'],
+parser.add_argument('--split', 
+                    choices=[None, 'simple', 'add_jump', 'length_generalization'],
                     help='Each possible split defines a different experiment as proposed by [1]')
-parser.add_argument('--validation_size', type=float, default=0.2,
+parser.add_argument('--validation_size', 
+                    type=float, 
+                    default=0.2,
                     help='Validation proportion to use for early-stopping')
-parser.add_argument('--n_iters', type=int, default=200000, help='number of training iterations')
-parser.add_argument('--learning_rate', type=float, default=1e-4, help='init learning rate')
-parser.add_argument('--teacher_forcing_ratio', type=float, default=0.5)
-parser.add_argument('--save_dir', type=str, default='./models/', help='Top-level directory for saving experiment')
-parser.add_argument('--print_freq', type=int, default=1000, help='Frequency with which to print training loss')
-parser.add_argument('--save_freq', type=int, default=20000, help='Frequency with which to save models during training')
+parser.add_argument('--n_iiters', 
+                    type=int, 
+                    default=200000, 
+                    help='number of training iterations')
+parser.add_argument('--learning_rate', 
+                    type=float, 
+                    default=1e-4,
+                    help='init learning rate')
+parser.add_argument('--teacher_forcing_ratio', 
+                    type=float, 
+                    default=0.5)
+parser.add_argument('--save_dir', 
+                    type=str, 
+                    default='./models/', 
+                    help='Top-level directory for saving experiment')
+parser.add_argument('--print_freq', 
+                    type=int, 
+                    default=1000, 
+                    help='Frequency with which to print training loss')
+parser.add_argument('--save_freq', 
+                    type=int, 
+                    default=20000, 
+                    help='Frequency with which to save models during training')
 args = parser.parse_args()
 
 args.save_path = os.path.join(args.save_dir,
                               '%s' % args.split,
                               '%s' % args.layer_type,
-                              'rnn_%s_hidden_%s_semantic_%s_layers_%s' % (args.layer_type,
-                                                                          args.hidden_size,
-                                                                          args.semantic_size,
-                                                                          args.num_layers))
+                              'rnn_%s_hidden_%s_semantic_%s_layers_%s' % \
+                              (args.layer_type,
+                               args.hidden_size,
+                               args.semantic_size,
+                               args.num_layers))
 # Create model directory
 if not os.path.isdir(args.save_path):
     os.makedirs(args.save_path)
@@ -68,13 +111,16 @@ def train(input_tensor,
     """Perform one training iteration for the model
 
     Args:
-        input_tensor: (torch.tensor) Tensor representation (1-hot) of sentence in input language
-        target_tensor: (torch.tensor) Tensor representation (1-hot) of target sentence in output language
+        input_tensor: (torch.tensor) Tensor representation (1-hot) of sentence 
+        in input language
+        target_tensor: (torch.tensor) Tensor representation (1-hot) of target 
+        sentence in output language
         model_to_train: (nn.Module: Seq2SeqModel) seq2seq model being trained
         enc_optimizer: (torch.optimizer) Optimizer object for model encoder
         dec_optimizer: (torch.optimizer) Optimizer object for model decoder
         loss_fn: (torch.nn.Loss) Loss object used for training
-        teacher_forcing_ratio: (float) Ratio with which true word is used as input to decoder
+        teacher_forcing_ratio: (float) Ratio with which true word is used as 
+        input to decoder
     Returns:
         (torch.scalar) Value of loss achieved by model at current iteration
     """
@@ -161,8 +207,10 @@ if __name__ == '__main__':
     model.to(device)
 
     # Initialize optimizers
-    encoder_optimizer = torch.optim.Adam(model.encoder.parameters(), lr=args.learning_rate)
-    decoder_optimizer = torch.optim.Adam(model.decoder.parameters(), lr=args.learning_rate)
+    encoder_optimizer = torch.optim.Adam(model.encoder.parameters(), 
+                                         lr=args.learning_rate)
+    decoder_optimizer = torch.optim.Adam(model.decoder.parameters(), 
+                                         lr=args.learning_rate)
 
     # Split off validation set
     val_size = int(len(train_pairs) * args.validation_size)
@@ -172,9 +220,12 @@ if __name__ == '__main__':
     # Convert data to torch tensors
     training_pairs = [tensors_from_pair(random.choice(train_pairs), commands, actions)
                       for i in range(args.n_iters)]
-    training_eval = [tensors_from_pair(pair, commands, actions) for pair in train_pairs]
-    validation_pairs = [tensors_from_pair(pair, commands, actions) for pair in val_pairs]
-    testing_pairs = [tensors_from_pair(pair, commands, actions) for pair in test_pairs]
+    training_eval = [tensors_from_pair(pair, commands, actions) 
+                     for pair in train_pairs]
+    validation_pairs = [tensors_from_pair(pair, commands, actions) 
+                        for pair in val_pairs]
+    testing_pairs = [tensors_from_pair(pair, commands, actions) 
+                     for pair in test_pairs]
 
     # Initialize criterion
     criterion = nn.NLLLoss().to(device)

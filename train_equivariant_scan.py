@@ -13,9 +13,12 @@ from perm_equivariant_seq2seq.utils import tensors_from_pair
 from perm_equivariant_seq2seq.symmetry_groups import get_permutation_equivariance
 
 """
-[1]: Lake and Baroni 2019: Generalization without systematicity: On the compositional skills of seq2seq networks
-[2]: Bahdanau et al. 2014: Neural machine translation by jointly learning to align and translate
-[3]: Russin et ak. 2019: Compositional generalization in a deep seq2seq model by saparating syntax and semantics
+[1]: Lake and Baroni 2019: Generalization without systematicity: On the 
+compositional skills of seq2seq networks
+[2]: Bahdanau et al. 2014: Neural machine translation by jointly learning to 
+align and translate
+[3]: Russin et ak. 2019: Compositional generalization in a deep seq2seq model 
+by saparating syntax and semantics
 """
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -25,33 +28,77 @@ EOS_token = 1
 # Parse command-line arguments
 parser = argparse.ArgumentParser()
 # Model options
-parser.add_argument('--hidden_size', type=int, default=64, help='Number of hidden units in encoder / decoder')
-parser.add_argument('--layer_type', choices=['GGRU', 'GRNN', 'GLSTM'], default='GLSTM',
+parser.add_argument('--hidden_size', 
+                    type=int, 
+                    default=64, 
+                    help='Number of hidden units in encoder / decoder')
+parser.add_argument('--layer_type', 
+                    choices=['GGRU', 'GRNN', 'GLSTM'], 
+                    default='GLSTM',
                     help='Type of rnn layers to be used for recurrent components')
-parser.add_argument('--use_attention', dest='use_attention', default=False, action='store_true',
+parser.add_argument('--use_attention', 
+                    dest='use_attention', 
+                    default=False, 
+                    action='store_true',
                     help="Boolean to use attention in the decoder")
-parser.add_argument('--bidirectional', dest='bidirectional', default=False, action='store_true',
+parser.add_argument('--bidirectional', 
+                    dest='bidirectional', 
+                    default=False, 
+                    action='store_true',
                     help="Boolean to use bidirectional encoder.")
 # Equivariance options:
-parser.add_argument('--equivariance', choices=['verb', 'direction', 'verb+direction', 'none'])
+parser.add_argument('--equivariance', 
+                    choices=['verb', 'direction', 'verb+direction', 'none'])
 # Optimization and training hyper-parameters
-parser.add_argument('--split', help='Each possible split defines a different experiment as proposed by [1]',
-                    choices=[None, 'simple', 'add_jump', 'length_generalization', 'around_right', 'opposite_right'])
-parser.add_argument('--weight_decay', type=float, default=0., help='Weight decay for optimizer')
-parser.add_argument('--batch_size', type=int, default=1, help='Number of pairs between each gradient step')
-parser.add_argument('--validation_size', type=float, default=0.2, help='Validation proportion to use for early-stopping')
-parser.add_argument('--n_iters', type=int, default=200000, help='number of training iterations')
-parser.add_argument('--learning_rate', type=float, default=1e-4, help='init learning rate')
-parser.add_argument('--teacher_forcing_ratio', type=float, default=0.5)
-parser.add_argument('--save_dir', type=str, default='./models/', help='Top-level directory for saving experiment')
-parser.add_argument('--print_freq', type=int, default=1000, help='Frequency with which to print training loss')
-parser.add_argument('--save_freq', type=int, default=200000, help='Frequency with which to save models during training')
+parser.add_argument('--split', 
+                    choices=[None, 'simple', 'add_jump', 
+                             'length_generalization', 'around_right', 
+                             'opposite_right'],
+                    help='Each possible split defines a different experiment as proposed by [1]')
+parser.add_argument('--weight_decay', 
+                    type=float, 
+                    default=0., 
+                    help='Weight decay for optimizer')
+parser.add_argument('--batch_size', 
+                    type=int, 
+                    default=1, 
+                    help='Number of pairs between each gradient step')
+parser.add_argument('--validation_size', 
+                    type=float, 
+                    default=0.2, 
+                    help='Validation proportion to use for early-stopping')
+parser.add_argument('--n_iters', 
+                    type=int, 
+                    default=200000, 
+                    help='number of training iterations')
+parser.add_argument('--learning_rate', 
+                    type=float, 
+                    default=1e-4, 
+                    help='init learning rate')
+parser.add_argument('--teacher_forcing_ratio', 
+                    type=float, 
+                    default=0.5)
+parser.add_argument('--save_dir', 
+                    type=str, 
+                    default='./models/', 
+                    help='Top-level directory for saving experiment')
+parser.add_argument('--print_freq', 
+                    type=int, 
+                    default=1000, 
+                    help='Frequency with which to print training loss')
+parser.add_argument('--save_freq', 
+                    type=int, 
+                    default=200000, 
+                    help='Frequency with which to save models during training')
 args = parser.parse_args()
 
 args.save_path = os.path.join(args.save_dir,
                               '%s' % args.split,
                               'rnn_%s_hidden_%s_directions_%s' % (
-                                  args.layer_type, args.hidden_size, 2 if args.bidirectional else 1))
+                                  args.layer_type, 
+                                  args.hidden_size, 
+                                  2 if args.bidirectional else 1
+                              ))
 # Create model directory
 if not os.path.isdir(args.save_path):
     os.makedirs(args.save_path)
@@ -62,7 +109,8 @@ def pair_generator(pairs, batch_size):
 
     Args:
         pairs (list::pairs): List of input / output sentences to generate from
-        batch_size (int): Size of each batch (number of translation pairs in a batch
+        batch_size (int): Size of each batch (number of translation pairs in a 
+        batch
     Returns:
         (generator) Object that yields batches of pairs to translate
     """
@@ -79,12 +127,14 @@ def train(batch,
     """Perform one training iteration for the model
 
     Args:
-        batch (torch.tensor): Tensor representation (1-hot) of sentence in input language
+        batch (torch.tensor): Tensor representation (1-hot) of sentence in 
+        input language
         model_to_train (nn.Module: Seq2SeqModel): seq2seq model being trained
         enc_optimizer (torch.optimizer): Optimizer object for model encoder
         dec_optimizer (torch.optimizer): Optimizer object for model decoder
         loss_fn (torch.nn.Loss): Loss object used for training
-        teacher_forcing_ratio (float): Ratio with which true word is used as input to decoder
+        teacher_forcing_ratio (float): Ratio with which true word is used as 
+        input to decoder
     Returns:
         (torch.scalar) Value of loss achieved by model at current iteration
     """
@@ -114,8 +164,7 @@ def train(batch,
         loss += sentence_loss / (di + 1)
 
     loss /= batch_size
-    if output_symmetry_group.learnable: # and iteration >= 50000:
-        # loss += 1e-3 * output_symmetry_group.lipschitz_permutation_regularization()
+    if output_symmetry_group.learnable:
         loss += 1e-4 * output_symmetry_group.doubly_stochastic_regularization()
 
     loss.backward()
@@ -168,23 +217,30 @@ if __name__ == '__main__':
     # Load data
     train_pairs, test_pairs = get_scan_split(split=args.split)
     if args.equivariance == 'verb':
-        in_equivariances, out_equivariances = ['jump', 'run', 'walk', 'look'], ['JUMP', 'RUN', 'WALK', 'LOOK']
+        in_equivariances = ['jump', 'run', 'walk', 'look']
+        out_equivariances = ['JUMP', 'RUN', 'WALK', 'LOOK']
     elif args.equivariance == 'direction':
-        in_equivariances, out_equivariances = ['right', 'left'], ['TURN_RIGHT', 'TURN_LEFT']
+        in_equivariances = ['right', 'left']
+        out_equivariances = ['TURN_RIGHT', 'TURN_LEFT']
     elif args.equivariance == 'verb+direction':
         in_equivariances = ['jump', 'run', 'walk', 'look', 'right', 'left']
         out_equivariances = ['JUMP', 'RUN', 'WALK', 'LOOK', 'TURN_RIGHT', 'TURN_LEFT']
     else:
         in_equivariances, out_equivariances = [], []
-    equivariant_commands, equivariant_actions = get_equivariant_scan_languages(pairs=train_pairs,
-                                                                               input_equivariances=in_equivariances,
-                                                                               output_equivariances=out_equivariances)
+    equivariant_commands, equivariant_actions = \
+        get_equivariant_scan_languages(pairs=train_pairs,
+                                       input_equivariances=in_equivariances,
+                                       output_equivariances=out_equivariances)
     if args.equivariance == 'verb+direction':
         from perm_equivariant_seq2seq.symmetry_groups import VerbDirectionSCAN
-        input_symmetry_group = VerbDirectionSCAN(num_letters=equivariant_commands.n_words,
-                                                 first_equivariant=equivariant_commands.num_fixed_words + 1)
-        output_symmetry_group = VerbDirectionSCAN(num_letters=equivariant_actions.n_words,
-                                                  first_equivariant=equivariant_actions.num_fixed_words + 1)
+        input_symmetry_group = VerbDirectionSCAN(
+            num_letters=equivariant_commands.n_words,
+            first_equivariant=equivariant_commands.num_fixed_words + 1
+        )
+        output_symmetry_group = VerbDirectionSCAN(
+            num_letters=equivariant_actions.n_words,
+            first_equivariant=equivariant_actions.num_fixed_words + 1
+        )
     else:
         input_symmetry_group = get_permutation_equivariance(equivariant_commands)
         output_symmetry_group = get_permutation_equivariance(equivariant_actions)
@@ -214,11 +270,16 @@ if __name__ == '__main__':
     train_pairs, val_pairs = train_pairs[val_size:], train_pairs[:val_size]
 
     # Convert data to torch tensors
-    training_pairs = [tensors_from_pair(random.choice(train_pairs), equivariant_commands, equivariant_actions)
+    training_pairs = [tensors_from_pair(random.choice(train_pairs), 
+                                        equivariant_commands, 
+                                        equivariant_actions)
                       for i in range(args.n_iters)]
-    training_eval = [tensors_from_pair(pair, equivariant_commands, equivariant_actions) for pair in train_pairs]
-    validation_pairs = [tensors_from_pair(pair, equivariant_commands, equivariant_actions) for pair in val_pairs]
-    testing_pairs = [tensors_from_pair(pair, equivariant_commands, equivariant_actions) for pair in test_pairs]
+    training_eval = [tensors_from_pair(pair, equivariant_commands, equivariant_actions) 
+                     for pair in train_pairs]
+    validation_pairs = [tensors_from_pair(pair, equivariant_commands, equivariant_actions) 
+                        for pair in val_pairs]
+    testing_pairs = [tensors_from_pair(pair, equivariant_commands, equivariant_actions) 
+                     for pair in test_pairs]
 
     # Initialize criterion
     criterion = nn.NLLLoss().to(device)
